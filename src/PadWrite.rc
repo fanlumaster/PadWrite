@@ -13,6 +13,8 @@
 
 INLINEOBJECTS           IMAGE                   "InlineObjects.png"
 
+IDI_PADWRITE_ICON ICON "DWriteIcon.ico"
+
 /////////////////////////////////////////////////////////////////////////////
 // Menu
 

@@ -17,35 +17,31 @@
 #include "PadWrite.h"
 #include "resource.h"
 
+static void FailApplication(const wchar_t *message, int functionResult);
 
-static void FailApplication(const wchar_t* message, int functionResult);
-
-
-const static wchar_t g_sampleText[] =
+const static wchar_t g_sampleText[] = //
     L"\tDirectWrite SDK sample\r\n"
     L"\n"
     L"Feel free to play around with the formatting options to see just some of what DWrite is capable of:\n\n"
-    L"Glyph rendering, Complex script shaping, Script analysis, Bidi ordering (\x202E" L"abc" L"\x202C), Line breaking, Font fallback, "
+    L"Glyph rendering, Complex script shaping, Script analysis, Bidi ordering (\x202E"
+    L"abc"
+    L"\x202C), Line breaking, Font fallback, "
     L"Font enumeration, ClearType rendering, Bold/Italic/Underline/Strikethrough/Narrow/Light, OpenType styles, Inline objects \xFFFC\xFFFC, "
     L"Trimming, Selection hit-testing...\r\n"
     L"\r\n"
     L"Mixed scripts: 한글 الْعَرَبيّة 中文 日本語 ภาษาไทย\r\n"
     L"CJK characters beyond BMP - 𠂢𠂤𠌫𝟙𝟚𝟛\r\n"
     L"Localized forms - Ş Ș vs Ş Ș; ۴۶ vs ۴۶\r\n"
-    L"Incremental tabs - 1	2	3"
-    ;
-
+    L"Incremental tabs - 1	2	3";
 
 ////////////////////////////////////////
 // Main entry.
 
-int APIENTRY wWinMain(
-    HINSTANCE   hInstance, 
-    HINSTANCE   hPrevInstance,
-    LPWSTR      commandLine,
-    int         nCmdShow
-    )
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR commandLine, int nCmdShow)
 {
+    // Set Dpi Awareness
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
     // The Microsoft Security Development Lifecycle recommends that all
     // applications include the following call to ensure that heap corruptions
     // do not go unnoticed and therefore do not introduce opportunities
@@ -74,20 +70,10 @@ int APIENTRY wWinMain(
     return 0;
 }
 
-
-MainWindow::MainWindow()
-:   renderTargetType_(RenderTargetTypeD2D),
-    hwnd_(NULL),
-    dwriteFactory_(),
-    wicFactory_(),
-    d2dFactory_(),
-    renderTarget_(),
-    textEditor_(),
-    inlineObjectImages_()
+MainWindow::MainWindow() : renderTargetType_(RenderTargetTypeD2D), hwnd_(NULL), dwriteFactory_(), wicFactory_(), d2dFactory_(), renderTarget_(), textEditor_(), inlineObjectImages_()
 {
     // no heavyweight initialization in the constructor.
 }
-
 
 HRESULT MainWindow::Initialize()
 {
@@ -101,33 +87,20 @@ HRESULT MainWindow::Initialize()
 
     if (SUCCEEDED(hr))
     {
-        hr = DWriteCreateFactory(
-                DWRITE_FACTORY_TYPE_SHARED,
-                __uuidof(IDWriteFactory),
-                reinterpret_cast<IUnknown**>(&dwriteFactory_)
-                );
+        hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown **>(&dwriteFactory_));
     }
 
     // Create D2D factory
     // Failure to create this factory is ok. We can live with GDI alone.
     if (SUCCEEDED(hr))
     {
-        D2D1CreateFactory(
-            D2D1_FACTORY_TYPE_SINGLE_THREADED,
-            &d2dFactory_
-            );
+        D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2dFactory_);
     }
 
     // Create WIC factory to load images.
     if (SUCCEEDED(hr))
     {
-        hr = CoCreateInstance(
-                CLSID_WICImagingFactory,
-                NULL,
-                CLSCTX_INPROC_SERVER,
-                IID_IWICImagingFactory,
-                (IID_PPV_ARGS(&wicFactory_))
-                );
+        hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_IWICImagingFactory, (IID_PPV_ARGS(&wicFactory_)));
     }
 
     //////////////////////////////
@@ -139,18 +112,7 @@ HRESULT MainWindow::Initialize()
         TextEditor::RegisterWindowClass();
 
         // create window (the hwnd is stored in the create event)
-        CreateWindow(
-                L"DirectWritePadDemo",
-                TEXT(APPLICATION_TITLE),
-                WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN,
-                CW_USEDEFAULT, CW_USEDEFAULT,
-                800,
-                600,
-                NULL,
-                NULL,
-                HINST_THISCOMPONENT,
-                this
-                );
+        CreateWindow(L"DirectWritePadDemo", TEXT(APPLICATION_TITLE), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, HINST_THISCOMPONENT, this);
 
         if (hwnd_ == NULL)
             hr = HRESULT_FROM_WIN32(GetLastError());
@@ -166,31 +128,16 @@ HRESULT MainWindow::Initialize()
     }
 
     // Need a text format to base the layout on.
-    IDWriteTextFormat* textFormat = NULL;
+    IDWriteTextFormat *textFormat = NULL;
     if (SUCCEEDED(hr))
     {
-        hr = dwriteFactory_->CreateTextFormat(
-            L"Arial",
-            NULL,
-            DWRITE_FONT_WEIGHT_NORMAL,
-            DWRITE_FONT_STYLE_NORMAL,
-            DWRITE_FONT_STRETCH_NORMAL,
-            16,
-            L"",
-            &textFormat
-            );
+        hr = dwriteFactory_->CreateTextFormat(L"Arial", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 16, L"", &textFormat);
     }
 
     // Set initial text and assign to the text editor.
     if (SUCCEEDED(hr))
     {
-        hr = TextEditor::Create(
-                hwnd_,
-                g_sampleText,
-                textFormat,
-                dwriteFactory_,
-                &textEditor_
-                );
+        hr = TextEditor::Create(hwnd_, g_sampleText, textFormat, dwriteFactory_, &textEditor_);
     }
 
     if (SUCCEEDED(hr))
@@ -220,27 +167,26 @@ HRESULT MainWindow::Initialize()
     return hr;
 }
 
-
 ATOM MainWindow::RegisterWindowClass()
 {
     // Registers window class.
     WNDCLASSEX wcex;
-    wcex.cbSize        = sizeof(WNDCLASSEX);
-    wcex.style         = CS_DBLCLKS;
-    wcex.lpfnWndProc   = &WindowProc;
-    wcex.cbClsExtra    = 0;
-    wcex.cbWndExtra    = sizeof(LONG_PTR);
-    wcex.hInstance     = HINST_THISCOMPONENT;
-    wcex.hIcon         = NULL;
-    wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style = CS_DBLCLKS;
+    wcex.lpfnWndProc = &WindowProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = sizeof(LONG_PTR);
+    wcex.hInstance = HINST_THISCOMPONENT;
+    wcex.hIcon = LoadIcon(HINST_THISCOMPONENT, MAKEINTRESOURCE(IDI_PADWRITE_ICON));
+    wcex.hIconSm = LoadIcon(HINST_THISCOMPONENT, MAKEINTRESOURCE(IDI_PADWRITE_ICON));
+    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = NULL;
-    wcex.lpszMenuName  = MAKEINTRESOURCE(1);
+    wcex.lpszMenuName = MAKEINTRESOURCE(1);
     wcex.lpszClassName = TEXT("DirectWritePadDemo");
-    wcex.hIconSm       = NULL;
+    wcex.hIconSm = NULL;
 
     return RegisterClassEx(&wcex);
 }
-
 
 HRESULT MainWindow::CreateRenderTarget(HWND hwnd, RenderTargetType renderTargetType)
 {
@@ -248,7 +194,7 @@ HRESULT MainWindow::CreateRenderTarget(HWND hwnd, RenderTargetType renderTargetT
 
     HRESULT hr = S_OK;
 
-    RenderTarget* renderTarget = NULL;
+    RenderTarget *renderTarget = NULL;
 
     // Create the render target.
     switch (renderTargetType)
@@ -279,7 +225,6 @@ HRESULT MainWindow::CreateRenderTarget(HWND hwnd, RenderTargetType renderTargetT
     return hr;
 }
 
-
 WPARAM MainWindow::RunMessageLoop()
 {
     MSG msg;
@@ -291,24 +236,22 @@ WPARAM MainWindow::RunMessageLoop()
     return msg.wParam;
 }
 
-
 LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     // Relays messages for the main window to the internal class.
 
-    MainWindow* window = reinterpret_cast<MainWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    MainWindow *window = reinterpret_cast<MainWindow *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (message)
     {
-    case WM_NCCREATE:
-        {
-            // Associate the data structure with this window handle.
-            CREATESTRUCT* pcs = reinterpret_cast<CREATESTRUCT*>(lParam);
-            window = reinterpret_cast<MainWindow*>(pcs->lpCreateParams);
-            window->hwnd_ = hwnd;
-            window->AddRef(); // implicit reference via HWND
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
-        }
+    case WM_NCCREATE: {
+        // Associate the data structure with this window handle.
+        CREATESTRUCT *pcs = reinterpret_cast<CREATESTRUCT *>(lParam);
+        window = reinterpret_cast<MainWindow *>(pcs->lpCreateParams);
+        window->hwnd_ = hwnd;
+        window->AddRef(); // implicit reference via HWND
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
+    }
         return DefWindowProc(hwnd, message, wParam, lParam);
 
     case WM_COMMAND:
@@ -355,12 +298,11 @@ LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT message, WPARAM wParam, 
     return 0;
 }
 
-
 void MainWindow::OnCommand(UINT commandId)
 {
     // Handles menu commands.
 
-    IDWriteTextLayout* textLayout = textEditor_->GetLayout();
+    IDWriteTextLayout *textLayout = textEditor_->GetLayout();
 
     switch (commandId)
     {
@@ -410,34 +352,27 @@ void MainWindow::OnCommand(UINT commandId)
         RedrawTextEditor();
         break;
 
-    case CommandIdWrap:
-        {
-            DWRITE_WORD_WRAPPING wordWrapping = textLayout->GetWordWrapping();
-            textLayout->SetWordWrapping((wordWrapping == DWRITE_WORD_WRAPPING_NO_WRAP)
-                                              ? DWRITE_WORD_WRAPPING_WRAP
-                                              : DWRITE_WORD_WRAPPING_NO_WRAP
-                                              );
-            RedrawTextEditor();
-        }
-        break;
+    case CommandIdWrap: {
+        DWRITE_WORD_WRAPPING wordWrapping = textLayout->GetWordWrapping();
+        textLayout->SetWordWrapping((wordWrapping == DWRITE_WORD_WRAPPING_NO_WRAP) ? DWRITE_WORD_WRAPPING_WRAP : DWRITE_WORD_WRAPPING_NO_WRAP);
+        RedrawTextEditor();
+    }
+    break;
 
-    case CommandIdTrim:
-        {
-            // Retrieve existing trimming sign and settings
-            // and modify them according to button state.
-            IDWriteInlineObject* inlineObject = NULL;
-            DWRITE_TRIMMING trimming = { DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0 };
+    case CommandIdTrim: {
+        // Retrieve existing trimming sign and settings
+        // and modify them according to button state.
+        IDWriteInlineObject *inlineObject = NULL;
+        DWRITE_TRIMMING trimming = {DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0};
 
-            textLayout->GetTrimming(&trimming, &inlineObject);
-            trimming.granularity = (trimming.granularity == DWRITE_TRIMMING_GRANULARITY_NONE)
-                                 ? DWRITE_TRIMMING_GRANULARITY_CHARACTER
-                                 : DWRITE_TRIMMING_GRANULARITY_NONE;
-            textLayout->SetTrimming(&trimming, inlineObject);
-            SafeRelease(&inlineObject);
+        textLayout->GetTrimming(&trimming, &inlineObject);
+        trimming.granularity = (trimming.granularity == DWRITE_TRIMMING_GRANULARITY_NONE) ? DWRITE_TRIMMING_GRANULARITY_CHARACTER : DWRITE_TRIMMING_GRANULARITY_NONE;
+        textLayout->SetTrimming(&trimming, inlineObject);
+        SafeRelease(&inlineObject);
 
-            RedrawTextEditor();
-        }
-        break;
+        RedrawTextEditor();
+    }
+    break;
 
     case CommandIdZoomIn:
         textEditor_->SetScale(1.25f, 1.25f, true);
@@ -471,7 +406,6 @@ void MainWindow::OnCommand(UINT commandId)
     return;
 }
 
-
 void MainWindow::OnSize()
 {
     // Updates the child edit control's size to fill the whole window.
@@ -482,24 +416,14 @@ void MainWindow::OnSize()
     RECT clientRect = {};
     GetClientRect(hwnd_, &clientRect);
 
-    SetWindowPos(
-        textEditor_->GetHwnd(),
-        NULL,
-        clientRect.left,
-        clientRect.top,
-        clientRect.right  - clientRect.left,
-        clientRect.bottom - clientRect.top,
-        SWP_NOACTIVATE|SWP_NOZORDER
-        );
+    SetWindowPos(textEditor_->GetHwnd(), NULL, clientRect.left, clientRect.top, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, SWP_NOACTIVATE | SWP_NOZORDER);
 }
-
 
 void MainWindow::OnDestroy()
 {
     SafeRelease(&textEditor_);
     SafeRelease(&renderTarget_);
 }
-
 
 void MainWindow::RedrawTextEditor()
 {
@@ -508,32 +432,30 @@ void MainWindow::RedrawTextEditor()
     textEditor_->RefreshView();
 }
 
-
 void MainWindow::UpdateMenuToCaret()
 {
     // Updates the menu state according to the formatting
     // at the current caret position.
 
-    IDWriteTextLayout* textLayout = textEditor_->GetLayout();
+    IDWriteTextLayout *textLayout = textEditor_->GetLayout();
 
     // Read layout-wide attributes from the layout.
-    DWRITE_TEXT_ALIGNMENT       textAlignment       = textLayout->GetTextAlignment();
-    DWRITE_WORD_WRAPPING        wordWrapping        = textLayout->GetWordWrapping();
-    DWRITE_READING_DIRECTION    readingDirection    = textLayout->GetReadingDirection();
-    DWRITE_TRIMMING             trimming            = { DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0 };
-    IDWriteInlineObject* inlineObject = NULL;
+    DWRITE_TEXT_ALIGNMENT textAlignment = textLayout->GetTextAlignment();
+    DWRITE_WORD_WRAPPING wordWrapping = textLayout->GetWordWrapping();
+    DWRITE_READING_DIRECTION readingDirection = textLayout->GetReadingDirection();
+    DWRITE_TRIMMING trimming = {DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0};
+    IDWriteInlineObject *inlineObject = NULL;
     textLayout->GetTrimming(&trimming, &inlineObject);
     SafeRelease(&inlineObject); // We don't need the inline object.
 
     HMENU hmenu = GetMenu(hwnd_);
-    CheckMenuItem(hmenu, CommandIdWrap,             MF_BYCOMMAND | (wordWrapping != DWRITE_WORD_WRAPPING_NO_WRAP ? MF_CHECKED : MF_UNCHECKED));
-    CheckMenuItem(hmenu, CommandIdTrim,             MF_BYCOMMAND | (trimming.granularity != DWRITE_TRIMMING_GRANULARITY_NONE ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hmenu, CommandIdWrap, MF_BYCOMMAND | (wordWrapping != DWRITE_WORD_WRAPPING_NO_WRAP ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hmenu, CommandIdTrim, MF_BYCOMMAND | (trimming.granularity != DWRITE_TRIMMING_GRANULARITY_NONE ? MF_CHECKED : MF_UNCHECKED));
 
-    CheckMenuRadioItem(hmenu, CommandIdAlignHFirst,     CommandIdAlignHLast,    CommandIdAlignHFirst + textAlignment,                   MF_BYCOMMAND);
-    CheckMenuRadioItem(hmenu, CommandIdLeftToRight,     CommandIdRightToLeft,   CommandIdLeftToRight + readingDirection,                MF_BYCOMMAND);
-    CheckMenuRadioItem(hmenu, CommandIdRenderFirst,     CommandIdRenderLast,    CommandIdRenderFirst + renderTargetType_,               MF_BYCOMMAND);
+    CheckMenuRadioItem(hmenu, CommandIdAlignHFirst, CommandIdAlignHLast, CommandIdAlignHFirst + textAlignment, MF_BYCOMMAND);
+    CheckMenuRadioItem(hmenu, CommandIdLeftToRight, CommandIdRightToLeft, CommandIdLeftToRight + readingDirection, MF_BYCOMMAND);
+    CheckMenuRadioItem(hmenu, CommandIdRenderFirst, CommandIdRenderLast, CommandIdRenderFirst + renderTargetType_, MF_BYCOMMAND);
 }
-
 
 HRESULT MainWindow::OnChooseFont()
 {
@@ -545,36 +467,36 @@ HRESULT MainWindow::OnChooseFont()
 
     //////////////////////////////
     // Read the caret format.
-    EditableLayout::CaretFormat& caretFormat = textEditor_->GetCaretFormat();
+    EditableLayout::CaretFormat &caretFormat = textEditor_->GetCaretFormat();
 
     //////////////////////////////
     // Initialize the LOGFONT from the caret format.
-    LOGFONT logFont             = {};
-    logFont.lfHeight            = -static_cast<LONG>(caretFormat.fontSize);
-    logFont.lfWidth             = 0;
-    logFont.lfEscapement        = 0;
-    logFont.lfOrientation       = 0;
-    logFont.lfWeight            = caretFormat.fontWeight;
-    logFont.lfItalic            = (caretFormat.fontStyle > DWRITE_FONT_STYLE_NORMAL);
-    logFont.lfUnderline         = static_cast<BYTE>(caretFormat.hasUnderline);
-    logFont.lfStrikeOut         = static_cast<BYTE>(caretFormat.hasStrikethrough);
-    logFont.lfCharSet           = DEFAULT_CHARSET;
-    logFont.lfOutPrecision      = OUT_DEFAULT_PRECIS;
-    logFont.lfClipPrecision     = CLIP_DEFAULT_PRECIS;
-    logFont.lfQuality           = DEFAULT_QUALITY;
-    logFont.lfPitchAndFamily    = DEFAULT_PITCH;
+    LOGFONT logFont = {};
+    logFont.lfHeight = -static_cast<LONG>(caretFormat.fontSize);
+    logFont.lfWidth = 0;
+    logFont.lfEscapement = 0;
+    logFont.lfOrientation = 0;
+    logFont.lfWeight = caretFormat.fontWeight;
+    logFont.lfItalic = (caretFormat.fontStyle > DWRITE_FONT_STYLE_NORMAL);
+    logFont.lfUnderline = static_cast<BYTE>(caretFormat.hasUnderline);
+    logFont.lfStrikeOut = static_cast<BYTE>(caretFormat.hasStrikethrough);
+    logFont.lfCharSet = DEFAULT_CHARSET;
+    logFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
+    logFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    logFont.lfQuality = DEFAULT_QUALITY;
+    logFont.lfPitchAndFamily = DEFAULT_PITCH;
     StringCchCopy(logFont.lfFaceName, ARRAYSIZE(logFont.lfFaceName), caretFormat.fontFamilyName);
 
     //////////////////////////////
     // Initialize CHOOSEFONT for the dialog.
 
-    CHOOSEFONT chooseFont   = {};
-    chooseFont.lStructSize  = sizeof(chooseFont);
-    chooseFont.hwndOwner    = hwnd_;
-    chooseFont.lpLogFont    = &logFont;
-    chooseFont.iPointSize   = 120; // Note that LOGFONT initialization takes precedence anyway.
-    chooseFont.rgbColors    = DrawingEffect::GetColorRef(caretFormat.color);
-    chooseFont.Flags        = CF_SCREENFONTS | CF_SCALABLEONLY | CF_NOVERTFONTS | CF_NOSCRIPTSEL | CF_EFFECTS | CF_INITTOLOGFONTSTRUCT;
+    CHOOSEFONT chooseFont = {};
+    chooseFont.lStructSize = sizeof(chooseFont);
+    chooseFont.hwndOwner = hwnd_;
+    chooseFont.lpLogFont = &logFont;
+    chooseFont.iPointSize = 120; // Note that LOGFONT initialization takes precedence anyway.
+    chooseFont.rgbColors = DrawingEffect::GetColorRef(caretFormat.color);
+    chooseFont.Flags = CF_SCREENFONTS | CF_SCALABLEONLY | CF_NOVERTFONTS | CF_NOSCRIPTSEL | CF_EFFECTS | CF_INITTOLOGFONTSTRUCT;
     // We don't show vertical fonts because we don't do vertical layout,
     // and don't show bitmap fonts because DirectWrite doesn't support them.
 
@@ -589,7 +511,7 @@ HRESULT MainWindow::OnChooseFont()
     if (logFont.lfFaceName[0] == L'\0')
         return hr;
 
-    IDWriteFont* font = NULL;
+    IDWriteFont *font = NULL;
     hr = CreateFontFromLOGFONT(logFont, &font);
 
     if (SUCCEEDED(hr))
@@ -599,18 +521,18 @@ HRESULT MainWindow::OnChooseFont()
 
     if (SUCCEEDED(hr))
     {
-        caretFormat.hasUnderline        = logFont.lfUnderline;
-        caretFormat.hasStrikethrough    = logFont.lfStrikeOut;
-        caretFormat.fontWeight          = font->GetWeight();
-        caretFormat.fontStretch         = font->GetStretch();
-        caretFormat.fontStyle           = font->GetStyle();
-        caretFormat.fontSize            = floor(float(chooseFont.iPointSize * (96.0f / 720)));
-        caretFormat.color               = DrawingEffect::GetBgra(chooseFont.rgbColors);
+        caretFormat.hasUnderline = logFont.lfUnderline;
+        caretFormat.hasStrikethrough = logFont.lfStrikeOut;
+        caretFormat.fontWeight = font->GetWeight();
+        caretFormat.fontStretch = font->GetStretch();
+        caretFormat.fontStyle = font->GetStyle();
+        caretFormat.fontSize = floor(float(chooseFont.iPointSize * (96.0f / 720)));
+        caretFormat.color = DrawingEffect::GetBgra(chooseFont.rgbColors);
 
         DWRITE_TEXT_RANGE textRange = textEditor_->GetSelectionRange();
         if (textRange.length > 0)
         {
-            IDWriteTextLayout* textLayout = textEditor_->GetLayout();
+            IDWriteTextLayout *textLayout = textEditor_->GetLayout();
             textLayout->SetUnderline(caretFormat.hasUnderline, textRange);
             textLayout->SetStrikethrough(caretFormat.hasStrikethrough, textRange);
             textLayout->SetFontWeight(caretFormat.fontWeight, textRange);
@@ -619,7 +541,7 @@ HRESULT MainWindow::OnChooseFont()
             textLayout->SetFontSize(caretFormat.fontSize, textRange);
             textLayout->SetFontFamilyName(caretFormat.fontFamilyName, textRange);
 
-            DrawingEffect* drawingEffect = SafeAcquire(new(std::nothrow) DrawingEffect(caretFormat.color));
+            DrawingEffect *drawingEffect = SafeAcquire(new (std::nothrow) DrawingEffect(caretFormat.color));
             textLayout->SetDrawingEffect(drawingEffect, textRange);
             SafeRelease(&drawingEffect);
 
@@ -631,7 +553,6 @@ HRESULT MainWindow::OnChooseFont()
 
     return hr;
 }
-
 
 HRESULT MainWindow::OnSetInlineImage()
 {
@@ -646,27 +567,26 @@ HRESULT MainWindow::OnSetInlineImage()
     fileName[0] = 0;
 
     OPENFILENAME chooseFile = {};
-    chooseFile.lStructSize  = sizeof(chooseFile);
-    chooseFile.hwndOwner    = hwnd_;
-    chooseFile.hInstance    = GetModuleHandle(NULL);
-    chooseFile.lpstrFilter  = L"Supported images\0" L"*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.gif\0" L"All files\0" L"(*)\0";
-    chooseFile.lpstrFile    = &fileName[0];
-    chooseFile.nMaxFile     = ARRAYSIZE(fileName);
-    chooseFile.Flags        = OFN_FILEMUSTEXIST|OFN_HIDEREADONLY;
+    chooseFile.lStructSize = sizeof(chooseFile);
+    chooseFile.hwndOwner = hwnd_;
+    chooseFile.hInstance = GetModuleHandle(NULL);
+    chooseFile.lpstrFilter = L"Supported images\0"
+                             L"*.png;*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.gif\0"
+                             L"All files\0"
+                             L"(*)\0";
+    chooseFile.lpstrFile = &fileName[0];
+    chooseFile.nMaxFile = ARRAYSIZE(fileName);
+    chooseFile.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
     // Get filename.
     if (!GetOpenFileName(&chooseFile))
-        return hr ;
+        return hr;
 
     //////////////////////////////
     // Create an inline object, using WIC to load the image.
 
-    IWICBitmapSource* bitmap = NULL;
-    hr = InlineImage::LoadImageFromFile(
-            fileName,
-            wicFactory_,
-            &bitmap
-            );
+    IWICBitmapSource *bitmap = NULL;
+    hr = InlineImage::LoadImageFromFile(fileName, wicFactory_, &bitmap);
 
     // Get the range of text to be replaced with an inline image.
     // If no text is selected, insert the Unicode object replacement
@@ -682,8 +602,8 @@ HRESULT MainWindow::OnSetInlineImage()
             textEditor_->SetSelection(TextEditor::SetSelectionModeAbsoluteLeading, textRange.startPosition + 1, true, false);
         }
 
-        IDWriteTextLayout*   textLayout   = textEditor_->GetLayout();
-        IDWriteInlineObject* inlineObject = SafeAcquire(new(std::nothrow) InlineImage(bitmap));
+        IDWriteTextLayout *textLayout = textEditor_->GetLayout();
+        IDWriteInlineObject *inlineObject = SafeAcquire(new (std::nothrow) InlineImage(bitmap));
         textLayout->SetInlineObject(inlineObject, textRange);
         SafeRelease(&inlineObject);
     }
@@ -695,18 +615,14 @@ HRESULT MainWindow::OnSetInlineImage()
     return hr;
 }
 
-
-STDMETHODIMP MainWindow::CreateFontFromLOGFONT(
-    const LOGFONT& logFont,
-    OUT IDWriteFont** font
-    )
+STDMETHODIMP MainWindow::CreateFontFromLOGFONT(const LOGFONT &logFont, OUT IDWriteFont **font)
 {
     *font = NULL;
 
     HRESULT hr = S_OK;
 
     // Conversion to and from LOGFONT uses the IDWriteGdiInterop interface.
-    IDWriteGdiInterop* gdiInterop = NULL;
+    IDWriteGdiInterop *gdiInterop = NULL;
     hr = dwriteFactory_->GetGdiInterop(&gdiInterop);
 
     // Find the font object that best matches the specified LOGFONT.
@@ -720,22 +636,17 @@ STDMETHODIMP MainWindow::CreateFontFromLOGFONT(
     return hr;
 }
 
-
-STDMETHODIMP MainWindow::GetFontFamilyName(
-    IDWriteFont* font,
-    OUT wchar_t* fontFamilyName,
-    UINT32 fontFamilyNameLength
-    )
+STDMETHODIMP MainWindow::GetFontFamilyName(IDWriteFont *font, OUT wchar_t *fontFamilyName, UINT32 fontFamilyNameLength)
 {
     HRESULT hr = S_OK;
 
     // Get the font family to which this font belongs.
-    IDWriteFontFamily* fontFamily = NULL;
+    IDWriteFontFamily *fontFamily = NULL;
     hr = font->GetFontFamily(&fontFamily);
 
     // Get the family names. This returns an object that encapsulates one or
     // more names with the same meaning but in different languages.
-    IDWriteLocalizedStrings* localizedFamilyNames = NULL;
+    IDWriteLocalizedStrings *localizedFamilyNames = NULL;
     if (SUCCEEDED(hr))
     {
         hr = fontFamily->GetFamilyNames(&localizedFamilyNames);
@@ -755,8 +666,7 @@ STDMETHODIMP MainWindow::GetFontFamilyName(
     return S_OK;
 }
 
-
-HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout* textLayout)
+HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout *textLayout)
 {
     // Formats the initial sample text with styles, drawing effects, and
     // typographic features.
@@ -770,7 +680,7 @@ HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout* textLayout)
     }
 
     // Set default color of black on entire range.
-    DrawingEffect* drawingEffect = SafeAcquire(new(std::nothrow) DrawingEffect(0xFF000000));
+    DrawingEffect *drawingEffect = SafeAcquire(new (std::nothrow) DrawingEffect(0xFF000000));
     if (SUCCEEDED(hr))
     {
         textLayout->SetDrawingEffect(drawingEffect, MakeDWriteTextRange(0));
@@ -778,18 +688,15 @@ HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout* textLayout)
 
     // Set initial trimming sign, but leave it disabled (granularity is none).
 
-    IDWriteInlineObject* inlineObject = NULL;
+    IDWriteInlineObject *inlineObject = NULL;
     if (SUCCEEDED(hr))
     {
-        hr = dwriteFactory_->CreateEllipsisTrimmingSign(
-                textLayout,
-                &inlineObject
-                );
+        hr = dwriteFactory_->CreateEllipsisTrimmingSign(textLayout, &inlineObject);
     }
 
     if (SUCCEEDED(hr))
     {
-        const static DWRITE_TRIMMING trimming = { DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0 };
+        const static DWRITE_TRIMMING trimming = {DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0};
         textLayout->SetTrimming(&trimming, inlineObject);
     }
 
@@ -802,10 +709,10 @@ HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout* textLayout)
 
         // Apply a color to the title words.
         {
-            DrawingEffect* drawingEffect1 = SafeAcquire(new(std::nothrow) DrawingEffect(0xFF1010D0));
-            DrawingEffect* drawingEffect2 = SafeAcquire(new(std::nothrow) DrawingEffect(0xFF10D010));
+            DrawingEffect *drawingEffect1 = SafeAcquire(new (std::nothrow) DrawingEffect(0xFF1010D0));
+            DrawingEffect *drawingEffect2 = SafeAcquire(new (std::nothrow) DrawingEffect(0xFF10D010));
             textLayout->SetDrawingEffect(drawingEffect1, MakeDWriteTextRange(0, 7));
-            textLayout->SetDrawingEffect(drawingEffect2, MakeDWriteTextRange (7, 5));
+            textLayout->SetDrawingEffect(drawingEffect2, MakeDWriteTextRange(7, 5));
             SafeRelease(&drawingEffect2);
             SafeRelease(&drawingEffect1);
         }
@@ -813,22 +720,22 @@ HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout* textLayout)
         // Set title font style.
         textLayout->SetFontSize(30, MakeDWriteTextRange(0, 25)); // first line of text
         textLayout->SetFontSize(60, MakeDWriteTextRange(1, 11)); // DirectWrite
-        textLayout->SetFontStyle(DWRITE_FONT_STYLE_ITALIC, MakeDWriteTextRange(0, 25) );
+        textLayout->SetFontStyle(DWRITE_FONT_STYLE_ITALIC, MakeDWriteTextRange(0, 25));
         textLayout->SetFontFamilyName(L"Gabriola", MakeDWriteTextRange(1, 11));
 
         // Add fancy swashes.
         {
-            IDWriteTypography* typoFeature = NULL;
+            IDWriteTypography *typoFeature = NULL;
             dwriteFactory_->CreateTypography(&typoFeature);
             DWRITE_FONT_FEATURE feature = {DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_7, 1};
             typoFeature->AddFontFeature(feature);
-            textLayout->SetTypography(typoFeature, MakeDWriteTextRange(1,11));
+            textLayout->SetTypography(typoFeature, MakeDWriteTextRange(1, 11));
             SafeRelease(&typoFeature);
         }
 
         // Apply decorations on demonstrated features.
         textLayout->SetFontWeight(DWRITE_FONT_WEIGHT_BOLD, MakeDWriteTextRange(277, 4));
-        textLayout->SetFontStyle(DWRITE_FONT_STYLE_ITALIC, MakeDWriteTextRange(282, 6) );
+        textLayout->SetFontStyle(DWRITE_FONT_STYLE_ITALIC, MakeDWriteTextRange(282, 6));
         textLayout->SetUnderline(TRUE, MakeDWriteTextRange(289, 9));
         textLayout->SetStrikethrough(TRUE, MakeDWriteTextRange(299, 13));
         textLayout->SetFontFamilyName(L"Arial", MakeDWriteTextRange(313, 6));
@@ -836,8 +743,8 @@ HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout* textLayout)
         textLayout->SetFontWeight(DWRITE_FONT_WEIGHT_LIGHT, MakeDWriteTextRange(320, 5));
 
         // Add two inline objects.
-        InlineImage* image1 = SafeAcquire(new(std::nothrow) InlineImage(inlineObjectImages_, 0));
-        InlineImage* image2 = SafeAcquire(new(std::nothrow) InlineImage(inlineObjectImages_, 1));
+        InlineImage *image1 = SafeAcquire(new (std::nothrow) InlineImage(inlineObjectImages_, 0));
+        InlineImage *image2 = SafeAcquire(new (std::nothrow) InlineImage(inlineObjectImages_, 1));
         textLayout->SetInlineObject(image1, MakeDWriteTextRange(359, 1));
         textLayout->SetInlineObject(image2, MakeDWriteTextRange(360, 1));
         SafeRelease(&image1);
@@ -862,17 +769,16 @@ HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout* textLayout)
     return hr;
 }
 
-
-void FailApplication(const wchar_t* message, int functionResult)
+void FailApplication(const wchar_t *message, int functionResult)
 {
     // Displays an error message and quits the program.
 
     wchar_t buffer[1000];
     buffer[0] = '\0';
 
-    const wchar_t* format = L"%s\r\nError code = %X";
+    const wchar_t *format = L"%s\r\nError code = %X";
 
     StringCchPrintf(buffer, ARRAYSIZE(buffer), format, message, functionResult);
-    MessageBox(NULL, buffer, TEXT(APPLICATION_TITLE), MB_OK|MB_ICONEXCLAMATION|MB_TASKMODAL);
+    MessageBox(NULL, buffer, TEXT(APPLICATION_TITLE), MB_OK | MB_ICONEXCLAMATION | MB_TASKMODAL);
     ExitProcess(functionResult);
 }

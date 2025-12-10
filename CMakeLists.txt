@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25.0)
-project(Win32CppTemplate VERSION 1.0)
+project(PadWrite VERSION 1.0)
 
 # Specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -12,7 +12,7 @@ add_definitions(
     /DUNICODE=1
 )
 
-set(MY_EXECUTABLE_NAME "Win32CppTemplate")
+set(MY_EXECUTABLE_NAME "PadWrite")
 set(
   SOURCE_FILES
   "./src/Common.h"

@@ -39,3 +39,6 @@
 #define CommandIdRenderLast             40079
 #define CommandIdFont                   40080
 #define CommandIdSetInlineImage         40081
+
+
+#define IDI_PADWRITE_ICON 101 // 注意，下面一定要有换行，这是 RC 编译器的要求
