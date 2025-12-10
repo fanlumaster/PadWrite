@@ -16,6 +16,8 @@
 #include "TextEditor.h"
 #include "PadWrite.h"
 #include "resource.h"
+#include <thread>
+#include "ThreadDemo.h"
 
 static void FailApplication(const wchar_t *message, int functionResult);
 
@@ -417,10 +419,16 @@ void MainWindow::OnCommand(UINT commandId)
         OnSetInlineImage();
         break;
 
+    case CommandIdOpenNewWindow:
+        OnOpenNewWindow();
+        break;
+
     case CommandIdExit:
         PostMessage(hwnd_, WM_CLOSE, 0, 0);
         break;
     }
+
+    return;
 
     return;
 }
@@ -632,6 +640,27 @@ HRESULT MainWindow::OnSetInlineImage()
     RedrawTextEditor();
 
     return hr;
+}
+
+HRESULT MainWindow::OnOpenNewWindow()
+{
+    // This demonstrates the multi-threaded document editing pattern:
+    //
+    // From the code snippet:
+    //   if(cmd.type==open_new_document)
+    //   {
+    //       std::string const new_name=get_filename_from_user();
+    //       std::thread t(edit_document,new_name);
+    //       t.detach();
+    //   }
+    //
+    // Here we create a new thread that runs open_new_document_window()
+    // which creates and runs a new MainWindow instance independently.
+
+    std::thread t(open_new_document_window);
+    t.detach(); // Detach the thread to let it run independently
+
+    return S_OK;
 }
 
 STDMETHODIMP MainWindow::CreateFontFromLOGFONT(const LOGFONT &logFont, OUT IDWriteFont **font)

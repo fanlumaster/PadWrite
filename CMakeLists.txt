@@ -30,6 +30,8 @@ set(
   "./src/resource.h"
   "./src/TextEditor.cpp"
   "./src/TextEditor.h"
+  "./src/ThreadDemo.cpp"
+  "./src/ThreadDemo.h"
 )
 
 add_executable(${MY_EXECUTABLE_NAME} WIN32 ${SOURCE_FILES})

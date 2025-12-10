@@ -67,6 +67,7 @@ class MainWindow : public ComBase<QiList<IUnknown>>
     void OnDestroy();
     HRESULT OnChooseFont();
     HRESULT OnSetInlineImage();
+    HRESULT OnOpenNewWindow();
 
     void UpdateMenuToCaret();
     void RedrawTextEditor();

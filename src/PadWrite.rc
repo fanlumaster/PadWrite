@@ -22,6 +22,8 @@ IDI_PADWRITE_ICON ICON "DWriteIcon.ico"
 BEGIN
     POPUP "File"
     BEGIN
+        MENUITEM "Open New Window\tCtrl+N",     CommandIdOpenNewWindow
+        MENUITEM SEPARATOR
         MENUITEM "Exit",                        IDCLOSE
     END
     POPUP "Edit"
