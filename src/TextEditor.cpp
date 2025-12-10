@@ -242,7 +242,7 @@ LRESULT CALLBACK TextEditor::WindowProc(HWND hwnd, UINT message, WPARAM wParam, 
         window = reinterpret_cast<TextEditor *>(pcs->lpCreateParams);
         window->hwnd_ = hwnd;
         window->AddRef(); // implicit reference via HWND
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, PtrToUlong(window));
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
 
         return DefWindowProc(hwnd, message, wParam, lParam);
     }
