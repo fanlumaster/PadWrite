@@ -112,7 +112,18 @@ HRESULT MainWindow::Initialize()
         TextEditor::RegisterWindowClass();
 
         // create window (the hwnd is stored in the create event)
-        CreateWindow(L"DirectWritePadDemo", TEXT(APPLICATION_TITLE), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, HINST_THISCOMPONENT, this);
+        CreateWindow(                              //
+            L"DirectWritePadDemo",                 //
+            TEXT(APPLICATION_TITLE),               //
+            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, //
+            CW_USEDEFAULT,                         //
+            CW_USEDEFAULT,                         //
+            800 * 1.5,                             //
+            600 * 1.5,                             //
+            NULL,                                  //
+            NULL,                                  //
+            HINST_THISCOMPONENT,                   //
+            this);
 
         if (hwnd_ == NULL)
             hr = HRESULT_FROM_WIN32(GetLastError());
@@ -131,7 +142,15 @@ HRESULT MainWindow::Initialize()
     IDWriteTextFormat *textFormat = NULL;
     if (SUCCEEDED(hr))
     {
-        hr = dwriteFactory_->CreateTextFormat(L"Arial", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 16, L"", &textFormat);
+        hr = dwriteFactory_->CreateTextFormat( //
+            L"Noto Sans",                      //
+            NULL,                              //
+            DWRITE_FONT_WEIGHT_NORMAL,         //
+            DWRITE_FONT_STYLE_NORMAL,          //
+            DWRITE_FONT_STRETCH_NORMAL,        //
+            16 * 1.5,                          //
+            L"",                               //
+            &textFormat);
     }
 
     // Set initial text and assign to the text editor.
@@ -705,7 +724,7 @@ HRESULT MainWindow::FormatSampleLayout(IDWriteTextLayout *textLayout)
         textLayout->SetReadingDirection(DWRITE_READING_DIRECTION_LEFT_TO_RIGHT);
 
         textLayout->SetFontFamilyName(L"Segoe UI", MakeDWriteTextRange(0));
-        textLayout->SetFontSize(18, MakeDWriteTextRange(0));
+        textLayout->SetFontSize(18 * 1.5, MakeDWriteTextRange(0));
 
         // Apply a color to the title words.
         {

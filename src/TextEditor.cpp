@@ -155,10 +155,13 @@ HRESULT TextEditor::Initialize(HWND parentHwnd, const wchar_t *text, IDWriteText
 
     // Create an ideal layout for the text editor based on the text and format,
     // favoring document layout over pixel alignment.
-    hr = layoutEditor_.GetFactory()->CreateTextLayout(text_.c_str(), static_cast<UINT32>(text_.size()), textFormat,
-                                                      580, // maximum width
-                                                      420, // maximum height
-                                                      &textLayout_);
+    hr = layoutEditor_.GetFactory()->CreateTextLayout( //
+        text_.c_str(),                                 //
+        static_cast<UINT32>(text_.size()),             //
+        textFormat,                                    //
+        700 * 1.5,                                     // maximum width
+        500 * 1.5,                                     // maximum height
+        &textLayout_);
 
     if (FAILED(hr))
         return hr;
@@ -184,7 +187,14 @@ HRESULT TextEditor::Initialize(HWND parentHwnd, const wchar_t *text, IDWriteText
     }
 
     // Create text editor window (hwnd is stored in the create event)
-    CreateWindowEx(WS_EX_STATICEDGE, L"DirectWriteEdit", L"", WS_CHILDWINDOW | WS_VSCROLL | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, parentHwnd, NULL, HINST_THISCOMPONENT, this);
+    CreateWindowEx(         //
+        WS_EX_STATICEDGE,   //
+        L"DirectWriteEdit", //
+        L"",                //
+        WS_CHILDWINDOW |    //
+                         // WS_VSCROLL |    //
+            WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, parentHwnd, NULL, HINST_THISCOMPONENT, this);
     if (hwnd_ == NULL)
         return HRESULT_FROM_WIN32(GetLastError());
 
@@ -365,7 +375,8 @@ void TextEditor::OnDraw()
     if (renderTarget_ != NULL) // in case event received before we have a target
     {
         renderTarget_->BeginDraw();
-        renderTarget_->Clear(D2D1::ColorF::LightGray);
+        // renderTarget_->Clear(D2D1::ColorF::LightGray);
+        renderTarget_->Clear(D2D1::ColorF::White);
         DrawPage(*renderTarget_);
         renderTarget_->EndDraw();
     }
@@ -480,7 +491,7 @@ void TextEditor::RefreshView()
 {
     // Redraws the text and scrollbars.
 
-    UpdateScrollInfo();
+    // UpdateScrollInfo();
     PostRedraw();
 }
 
@@ -597,17 +608,17 @@ void TextEditor::UpdateScrollInfo()
     scrollInfo.nPos = int(scaledSize.y >= 0 ? y : pageSize.y - y);
     scrollInfo.nMin = 0;
     scrollInfo.nMax = int(pageSize.y) + scrollInfo.nPage;
-    SetScrollInfo(hwnd_, SB_VERT, &scrollInfo, TRUE);
+    // SetScrollInfo(hwnd_, SB_VERT, &scrollInfo, TRUE);
     scrollInfo.nPos = 0;
     scrollInfo.nMax = 0;
-    GetScrollInfo(hwnd_, SB_VERT, &scrollInfo);
+    // GetScrollInfo(hwnd_, SB_VERT, &scrollInfo);
 
     // Set horizontal scroll bar.
     scrollInfo.nPage = int(abs(scaledSize.x));
     scrollInfo.nPos = int(scaledSize.x >= 0 ? x : pageSize.x - x);
     scrollInfo.nMin = 0;
     scrollInfo.nMax = int(pageSize.x) + scrollInfo.nPage;
-    SetScrollInfo(hwnd_, SB_HORZ, &scrollInfo, TRUE);
+    // SetScrollInfo(hwnd_, SB_HORZ, &scrollInfo, TRUE);
 }
 
 void TextEditor::OnSize(UINT width, UINT height)
